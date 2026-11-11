@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="noel">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Loto &amp; Bingo</title>
+<meta name="description" content="Tirage de loto et de bingo avec annonce vocale, pour écran, TV et vidéoprojecteur.">
+<meta name="theme-color" content="#0b3d2a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="decor" aria-hidden="true"></div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<!-- ===== Accueil ===== -->
+<main id="home" class="screen">
+  <h1 class="title" data-title></h1>
+  <p class="subtitle">Choisissez votre jeu</p>
+  <div class="home-cards">
+    <button class="card" data-new="loto">
+      <span class="card-ball">90</span>
+      <span class="card-name">Loto</span>
+      <span class="card-desc">90 numéros · quine, double quine, carton plein</span>
+    </button>
+    <button class="card" data-new="bingo">
+      <span class="card-ball">75</span>
+      <span class="card-name">Bingo</span>
+      <span class="card-desc">75 numéros · B-I-N-G-O · ligne puis grille complète</span>
+    </button>
+  </div>
+  <div class="home-actions">
+    <button id="btn-resume" class="btn primary" hidden>▶ Reprendre la partie en cours</button>
+    <button class="btn" data-open="gift">🎁 Cadeau surprise</button>
+    <button class="btn" data-open="settings">⚙ Réglages</button>
+  </div>
+</main>
+
+<!-- ===== Partie ===== -->
+<main id="game" class="screen" hidden>
+  <section class="left">
+    <header class="bar">
+      <h1 class="title small" data-title></h1>
+      <div id="stages" class="stages"></div>
+      <p id="lot" class="lot"></p>
+    </header>
+
+    <div class="ball-zone">
+      <div id="ball" class="ball empty">
+        <div class="ball-inner">
+          <span id="ball-letter" class="ball-letter"></span>
+          <span id="ball-num" class="ball-num">?</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="under-ball">
+      <div class="last"><span class="last-label">Derniers numéros</span><div id="last" class="last-list"></div></div>
+      <div id="counter" class="counter"></div>
+    </div>
+
+    <nav class="controls">
+      <button id="btn-draw" class="btn primary big">🎱 Tirer un numéro</button>
+      <button id="btn-auto" class="btn"><span id="auto-label">⏵ Auto</span><i id="autobar"></i></button>
+      <button id="btn-undo" class="btn">↶ Annuler</button>
+      <button id="btn-win" class="btn accent">🏆 Gagnant ?</button>
+      <button class="btn" data-open="gift">🎁 Cadeau</button>
+      <button class="btn" data-open="history">📋 Historique</button>
+      <button class="btn" data-open="settings">⚙</button>
+      <button id="btn-home" class="btn">🏠</button>
+    </nav>
+  </section>
+
+  <section class="right">
+    <div id="grid" class="grid"></div>
+  </section>
+</main>
+
+<!-- ===== Vérification / gagnant ===== -->
+<div id="win" class="overlay" hidden>
+  <div class="panel center">
+    <div id="win-check">
+      <h2>Vérification du carton</h2>
+      <p id="win-stage" class="win-stage"></p>
+      <p class="hint">Numéros sortis (dans l'ordre croissant) :</p>
+      <div id="win-nums" class="nums"></div>
+      <div class="row">
+        <button id="win-ok" class="btn primary big">✔ Carton valide</button>
+        <button id="win-no" class="btn big">✖ Fausse alerte</button>
+      </div>
+    </div>
+    <div id="win-party" hidden>
+      <p class="party-emoji">🏆</p>
+      <h2 id="win-title" class="party-title"></h2>
+      <p id="win-lot" class="party-lot"></p>
+      <div class="row">
+        <button id="win-next" class="btn primary big"></button>
+        <button id="win-close" class="btn big">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Historique ===== -->
+<div id="history" class="overlay" hidden>
+  <div class="panel">
+    <h2>Historique du tirage</h2>
+    <p class="hint">Dans l'ordre de sortie (le dernier en premier).</p>
+    <div id="history-nums" class="nums"></div>
+    <div class="row"><button class="btn primary" data-close>Fermer</button></div>
+  </div>
+</div>
+
+<!-- ===== Cadeau surprise ===== -->
+<div id="gift" class="overlay" hidden>
+  <div class="panel wide">
+    <h2>🎁 Cadeau surprise</h2>
+    <div class="gift-cols">
+      <div class="gift-stage">
+        <div id="gift-name" class="gift-name">?</div>
+        <p id="gift-info" class="hint"></p>
+        <div class="row">
+          <button id="gift-draw" class="btn primary big">🎲 Tirer au sort</button>
+          <button class="btn big" data-close>Fermer</button>
+        </div>
+        <p class="hint">Déjà gagné :</p>
+        <div id="gift-winners" class="chips"></div>
+        <button id="gift-reset" class="btn small">Remettre tous les joueurs en jeu</button>
+      </div>
+      <div class="gift-list">
+        <label for="gift-names">Joueurs (un prénom par ligne)</label>
+        <textarea id="gift-names" rows="10" placeholder="Marie&#10;Paul&#10;Léa"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Réglages ===== -->
+<div id="settings" class="overlay" hidden>
+  <div class="panel">
+    <h2>⚙ Réglages</h2>
+    <div class="form">
+      <label for="set-theme">Thème</label>
+      <select id="set-theme">
+        <option value="noel">🎄 Noël</option>
+        <option value="nouvelan">🎉 Nouvel An / fête</option>
+        <option value="paques">🐣 Pâques / printemps</option>
+        <option value="halloween">🎃 Halloween</option>
+        <option value="neutre">Neutre / classique</option>
+      </select>
+
+      <label for="set-title">Titre affiché</label>
+      <input id="set-title" type="text" maxlength="40" placeholder="(titre du thème)">
+
+      <label for="set-voice">Annonce vocale</label>
+      <input id="set-voice" type="checkbox">
+
+      <label for="set-digits">Répéter chiffre par chiffre</label>
+      <input id="set-digits" type="checkbox">
+
+      <label for="set-sfx">Bruitages</label>
+      <input id="set-sfx" type="checkbox">
+
+      <label for="set-decor">Décor animé</label>
+      <input id="set-decor" type="checkbox">
+
+      <label for="set-interval">Tirage auto : <b id="set-interval-val"></b> s entre deux numéros</label>
+      <input id="set-interval" type="range" min="3" max="30" step="1">
+
+      <div id="set-lots" class="lots"></div>
+    </div>
+    <div class="row">
+      <button id="set-test" class="btn">🔊 Tester la voix</button>
+      <button id="set-full" class="btn">⛶ Plein écran</button>
+      <button class="btn primary" data-close>Fermer</button>
+    </div>
+    <p class="hint">Raccourcis : Entrée/Espace = tirer · A = auto · Z = annuler · G = gagnant · C = cadeau · Échap = fermer</p>
+  </div>
+</div>
+
+<!-- ===== Confirmation ===== -->
+<div id="confirm" class="overlay" hidden>
+  <div class="panel center narrow">
+    <p id="confirm-text" class="confirm-text"></p>
+    <div class="row">
+      <button id="confirm-yes" class="btn primary big">Oui</button>
+      <button id="confirm-no" class="btn big">Non</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+<script src="js/app.js"></script>
+</body>
+</html>
